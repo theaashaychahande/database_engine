@@ -11,6 +11,9 @@ use std::io::Write;
 // Import the Read trait, which gives Files the `.read_to_string` method.
 use std::io::Read;
 
+// Import stdin so we can read lines typed by the user.
+use std::io::stdin;
+
 // Save every key-value pair in the HashMap to a file called data.txt.
 // Each pair is written on its own line in the format key=value.
 fn save_to_file(store: &HashMap<String, String>) {
@@ -53,6 +56,18 @@ fn load_from_file(store: &mut HashMap<String, String>) {
     }
 }
 
+// Read one line of text typed by the user, without the trailing newline.
+fn read_line() -> String {
+    // Create an empty String to hold the line.
+    let mut line = String::new();
+
+    // Read from standard input and stop the program if reading fails.
+    stdin().read_line(&mut line).expect("failed to read input");
+
+    // Remove the trailing newline (and any carriage return) and return the line.
+    line.trim().to_string()
+}
+
 fn main() {
     // Create a new empty HashMap.
     // The key type (String) is noted with `Key`, the value type (String) with `Value`.
@@ -61,21 +76,79 @@ fn main() {
     // Load any previously saved data from data.txt.
     load_from_file(&mut store);
 
-    // Insert the first key-value pair into the HashMap.
-    store.insert(
-        String::from("name"),
-        String::from("database_engine"),
-    );
+    // Print the available commands once so the user knows what they can do.
+    println!("Commands: insert, get, delete, list, exit");
 
-    // Insert a second key-value pair into the HashMap.
-    store.insert(
-        String::from("version"),
-        String::from("0.1.0"),
-    );
+    // Keep asking for commands until the user types "exit".
+    loop {
+        // Ask the user for a command.
+        print!("\n> ");
+        println!(); // newline after the prompt
 
-    // Print the entire HashMap so we can see its contents.
-    println!("{:#?}", store);
+        // Read the command the user typed.
+        let command = read_line();
 
-    // Save the HashMap to data.txt.
-    save_to_file(&store);
+        // Decide what to do based on the command.
+        match command.as_str() {
+            // Add a new key-value pair to the HashMap.
+            "insert" => {
+                // Ask for the key and read it.
+                print!("key: ");
+                let key = read_line();
+
+                // Ask for the value and read it.
+                print!("value: ");
+                let value = read_line();
+
+                // Insert the pair into the HashMap.
+                store.insert(key, value);
+            }
+
+            // Look up a key and print its value if it exists.
+            "get" => {
+                // Ask for the key and read it.
+                print!("key: ");
+                let key = read_line();
+
+                // Look up the key in the HashMap.
+                match store.get(&key) {
+                    // The key was found, so print its value.
+                    Some(value) => println!("{}", value),
+                    // The key was not found, so say so.
+                    None => println!("key not found"),
+                }
+            }
+
+            // Remove a key-value pair from the HashMap.
+            "delete" => {
+                // Ask for the key and read it.
+                print!("key: ");
+                let key = read_line();
+
+                // Remove the key from the HashMap. If it was present, say so.
+                match store.remove(&key) {
+                    Some(_) => println!("deleted"),
+                    None => println!("key not found"),
+                }
+            }
+
+            // Print every key-value pair currently stored.
+            "list" => {
+                // Print each pair in the HashMap.
+                for (key, value) in &store {
+                    println!("{}={}", key, value);
+                }
+            }
+
+            // Save everything and stop the loop.
+            "exit" => {
+                // Save the HashMap to data.txt.
+                save_to_file(&store);
+                break;
+            }
+
+            // Any other input is not a valid command.
+            _ => println!("unknown command"),
+        }
+    }
 }
