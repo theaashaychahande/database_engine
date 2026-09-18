@@ -108,9 +108,45 @@ fn read_line() -> Option<String> {
     Some(line.trim().to_string())
 }
 
+// ---------------------------------------------------------------------------
+// How databases speed up lookups with an index
+// ---------------------------------------------------------------------------
+//
+// If a database had no index, every `get` would have to scan through all the
+// rows in a table to find the matching key. That works, but it is slow: for N
+// rows you might have to look at all N of them, so lookups take O(N) time.
+//
+// To avoid that scan, real databases keep an extra structure called an index.
+// The index maps each key to where its data actually lives. Two common kinds are:
+//
+//   1. B-tree index
+//      A balanced tree where every node holds a range of sorted keys.
+//      Because the tree stays balanced, a lookup only has to follow
+//      O(log N) nodes from the root to a leaf, even with millions of rows.
+//      B-trees are great when data is stored on disk because they minimize
+//      how many disk blocks need to be read.
+//
+//   2. Hash index
+//      A hash is computed from the key, and that hash tells you exactly
+//      which "bucket" the value lives in. Finding a value is O(1) on
+//      average - you hash once and jump straight to the right bucket,
+//      no matter how much data is stored.
+//
+// In both cases the idea is the same: instead of scanning all the data on
+// every lookup, the index acts like a shortcut straight to the answer.
+//
+// Simple example within this project:
+// The std::collections::HashMap used below already works as a basic
+// *hash index*. When we call `store.get(&key)`, Rust hashes the key and
+// jumps directly to the bucket that holds it - no scan over every entry.
+// `store.insert` and `store.remove` do the same O(1) hash-and-jump lookup,
+// which is exactly the hash-index strategy real databases use.
+// ---------------------------------------------------------------------------
+
 fn main() {
     // Create a new empty HashMap.
     // The key type (String) is noted with `Key`, the value type (String) with `Value`.
+    // This HashMap is our in-memory "hash index" (see the note above).
     let mut store: HashMap<String, String> = HashMap::new();
 
     // Load any previously saved data from data.txt.
