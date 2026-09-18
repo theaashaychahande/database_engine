@@ -1,3 +1,4 @@
+## Not completed yet need to add GUI and Web interface and add more schemes init 
 # Database Engine
 
 > A tiny key-value database, written from scratch in Rust, that lives entirely
